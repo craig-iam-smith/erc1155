@@ -57,8 +57,25 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         uint256 amountsLength =amounts.length;
         require (idsLength > 0);
         require (idsLength == amountsLength);
-        // if the from address is zero
-        if (from == address(0))
+        for (i = 0; i < idsLength; i++) {
+        // if the from address is zero, minting
+            if (from == address(0)) {
+                if (_totalTokens[id] == 0) {
+                    _ownedTokens[to].push(ids[i]);
+                    _tokenOwners[id].push(to);
+                }
+                _totalTokens[id] += amounts[i];
+            }
+            // burning
+            if (to == address(0)) {
+                _totalTokens[id] -= amounts[i];
+                for (j=0;j<_ownedTokens[to].length;j++){
+                    _;
+                }
+            }
+            // transferring
+
+        }
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);   
     }
 
@@ -70,8 +87,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         address[] memory payees = _tokenOwners[id];
         uint256 end = payees.length;
         require (paymentTokenContract != address(0));
-//        require (paymentTokenContract.balanceOf[msg.sender] > amount, "Must have enough of payment token");
-        uint256 percentage;
+        require (payToken.balanceOf(msg.sender) > amount, "Must have enough of payment token");
         uint256 total=0;
         uint256 ownership;
         uint256 share;
