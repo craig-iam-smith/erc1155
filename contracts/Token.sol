@@ -42,4 +42,12 @@ contract MyToken is ERC1155, Ownable, Pausable, ERC1155Burnable {
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
+
+    function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner
+    {
+        uint256 i;
+        for (i=0;i<_balances[id].length;i++) {
+            
+        }
+    }
 }
