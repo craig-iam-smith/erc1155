@@ -12,51 +12,61 @@ import "./IERC1155Enumerable.sol";
  * account.
  */
 abstract contract ERC1155Enumerable is ERC1155, IERC1155Enumerable {
-    // Mapping from owner to list of owned token IDs
-    mapping(address => mapping(uint256 => uint256)) private _ownedTokens;
+    // Mapping from owner to array of token IDs owned 
+    mapping(address => uint256[]) private _ownedTokens;
 
-    // Mapping from token ID to index of the owner tokens list
-    mapping(uint256 => uint256) private _ownedTokensIndex;
+    // Mapping from token ID to array of owners
+    mapping(uint256 => address[]) private _tokenOwnersArray;
 
     // Array with all token ids, used for enumeration
     uint256[] private _allTokens;
 
     // Mapping from token id to position in the allTokens array
     mapping(uint256 => uint256) private _allTokensIndex;
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-     
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC1155) returns (bool) {
-        return (/* interfaceId == type(IERC721Enumerable).interfaceId || */
-               interfaceId == type(IERC1155Enumerable).interfaceID || 
-                super.supportsInterface(interfaceId));
+    /*
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165, IERC1155) returns (bool) {
+        return
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155MetadataURI).interfaceId ||
+            interfaceId == type(IERC1155Enumerable).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
-    
+*/
+    function totalSupply(uint256 index) public view virtual returns (uint256) {
+        return _allTokens[index];
+    }
 
+    function _afterTokenTransfer(address operator, 
+        address from, address to, 
+        uint256[] memory ids, 
+        uint256[] memory amounts, 
+        bytes memory data) internal override virtual {
+            uint256 idsLength = ids.length;
+            uint256 amountsLength =amounts.length;
+            require (idsLength > 0);
+            require (idsLength == amountsLength);
+            
+        }
     /**
-     * @dev See {IERC1155Enumerable-tokenOfOwnerByIndex}.
+     * @dev .
      */
-    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual override returns (uint256) {
-        require(index < ERC1155.balanceOf(owner, index), "ERC1155Enumerable: owner index out of bounds");
+     /*
+    function tokenOfOwnerByIndex(address owner, uint256 index) public view virtual returns (uint256) {
+        require(owner != address(0), "ERC1155Enumerable: owner out of bounds");
+        require(_tokenOwnersArray[index].length > 0);
         return _ownedTokens[owner][index];
     }
-
-    /**
-     * @dev See {IERC1155Enumerable-totalSupply}.
-     */
-    function totalSupply() public view virtual override returns (uint256) {
-        return _allTokens.length;
-    }
+*/
 
     /**
      * @dev See {IERC1155Enumerable-tokenByIndex}.
      */
+     /*
     function tokenByIndex(uint256 index) public view virtual override returns (uint256) {
         require(index < ERC1155Enumerable.totalSupply(), "ERC1155Enumerable: global index out of bounds");
         return _allTokens[index];
     }
+    */
 
     /**
      * @dev See {ERC1155-_beforeTokenTransfer}.
@@ -97,8 +107,7 @@ abstract contract ERC1155Enumerable is ERC1155, IERC1155Enumerable {
      */
     function _addTokenToOwnerEnumeration(address to, uint256 tokenId) private {
         uint256 length = ERC1155.balanceOf(to, tokenId);
-        _ownedTokens[to][length] = tokenId;
-        _ownedTokensIndex[tokenId] = length;
+        _ownedTokens[to].push(tokenId);
     }
 
     /**
@@ -121,8 +130,8 @@ abstract contract ERC1155Enumerable is ERC1155, IERC1155Enumerable {
     function _removeTokenFromOwnerEnumeration(address from, uint256 tokenId) private {
         // To prevent a gap in from's tokens array, we store the last token in the index of the token to delete, and
         // then delete the last slot (swap and pop).
-
-        uint256 lastTokenIndex = ERC1155.balanceOf(from, tokenId) - 1;
+/*
+        uint256 lastTokenIndex = _tokenOwnersERC1155.balanceOf(from, tokenId) - 1;
         uint256 tokenIndex = _ownedTokensIndex[tokenId];
 
         // When the token to delete is the last token, the swap operation is unnecessary
@@ -136,6 +145,7 @@ abstract contract ERC1155Enumerable is ERC1155, IERC1155Enumerable {
         // This also deletes the contents at the last position of the array
         delete _ownedTokensIndex[tokenId];
         delete _ownedTokens[from][lastTokenIndex];
+        */
     }
 
     /**

@@ -9,6 +9,11 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 contract MyToken is ERC1155, Ownable, Pausable, ERC1155Burnable {
     constructor() ERC1155("") {}
 
+
+    function supportsInterface(bytes4 interfaceId) external view returns (bool) {
+        // How should the check here be like?
+    }
+    
     function setURI(string memory newuri) public onlyOwner {
         _setURI(newuri);
     }
