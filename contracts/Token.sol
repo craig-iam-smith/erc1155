@@ -13,6 +13,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
     mapping(address => uint256[]) private _ownedTokens;
     // Mapping from token ID to array of owners
     mapping(uint256 => address[]) private _tokenOwners;
+    mapping(uint256 => mapping(address => uint256)) private _idTokenOwnerIndex;
     // Mapping from token ID to total tokens minted
     mapping(uint256 => uint256) private _totalTokens;
 
@@ -57,27 +58,52 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         uint256 amountsLength =amounts.length;
         require (idsLength > 0);
         require (idsLength == amountsLength);
-        for (i = 0; i < idsLength; i++) {
-        // if the from address is zero, minting
+        uint256 id;
+        uint256 amount;
+        
+        for (uint256 i = 0; i < idsLength; i++) {
+            id = ids[i];
+            amount = amounts[i];
+            // minting
             if (from == address(0)) {
-                if (_totalTokens[id] == 0) {
-                    _ownedTokens[to].push(ids[i]);
-                    _tokenOwners[id].push(to);
-                }
-                _totalTokens[id] += amounts[i];
+                _totalTokens[id] += amount;
+                // if minting and this is first mint, so first real TokenOwnerIndex is non-zero
+                if (_totalTokens[id] == 0)
+                    _tokenOwners[id].push(msg.sender);
             }
-            // burning
+            // burning 
             if (to == address(0)) {
-                _totalTokens[id] -= amounts[i];
-                for (j=0;j<_ownedTokens[to].length;j++){
-                    _;
-                }
+                _totalTokens[id] -= amount;
+            }                
+            // if 'to' does not have a _idTokenOwnerIndex (has no tokens)
+            if ((_idTokenOwnerIndex[id][to] == 0) && (amount > 0)) {
+                addToTracking(id, to);
             }
-            // transferring
-
+            if (balanceOf(from, id) == amount) {
+                removeFromTracking(id, from);
+            }
         }
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);   
     }
+
+    function removeFromTracking(uint256 id, address owner) private {
+        uint256 myLength = _tokenOwners[id].length-1;
+        uint256 index = _idTokenOwnerIndex[id][owner];  
+        // if balanceOf(owner, id) == amount delete from arrays
+        if (index != myLength) {
+            _ownedTokens[owner][index] = _ownedTokens[owner][myLength];
+            _tokenOwners[id][index] = _tokenOwners[id][myLength];
+        }
+        _ownedTokens[owner].pop;
+        _tokenOwners[id].pop;
+        _idTokenOwnerIndex[id][owner] = 0;
+    }
+    function addToTracking (uint256 id, address owner) private {
+        _ownedTokens[owner].push(id); 
+        _tokenOwners[id].push(owner);     
+        _idTokenOwnerIndex[id][owner] = _tokenOwners[id].length-1; // keep track of index 
+    }
+
 
     function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner
     {
