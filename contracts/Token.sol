@@ -72,15 +72,18 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
                     _tokenOwners[id].push(msg.sender);
             }
             // burning 
-            if (to == address(0)) {
+            else if (to == address(0)) {
                 _totalTokens[id] -= amount;
-            }                
-            // if 'to' does not have a _idTokenOwnerIndex (has no tokens)
-            if ((_idTokenOwnerIndex[id][to] == 0) && (amount > 0)) {
-                addToTracking(id, to);
             }
-            if (balanceOf(from, id) == amount) {
-                removeFromTracking(id, from);
+            // transferring
+            else {             
+                if ((balanceOf(from, id) == amount) && (amount > 0)) {
+                    removeFromTracking(id, from);
+                }               
+            // if 'to' does not have a _idTokenOwnerIndex (has no tokens)
+                if ((_idTokenOwnerIndex[id][to] == 0) && (amount > 0)) {
+                    addToTracking(id, to);
+                }
             }
         }
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);   
