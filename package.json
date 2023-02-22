@@ -1,0 +1,11 @@
+{
+  "name": "erc1155",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/craig-iam-smith/erc1155",
+  "author": "craig-iam-smith <craig.iam.smith@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.8.1"
+  }
+}
