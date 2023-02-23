@@ -124,8 +124,9 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
     // @dev 
     // @params owner 
     // @return returns array of token ids owned by this address
-    function getTokensOwned(address owner) public view returns (uint256[] memory) {
-        return _ownedTokens[owner];
+    function getTokensOwned(address account) public view returns (uint256[] memory) {
+        require (account != address(0));
+        return _ownedTokens[account];
     }
     
     // @dev
@@ -146,11 +147,13 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         uint256 total=0;
         uint256 ownership;
         uint256 share;
+        bool success;
         for (i=0;i<end;i++) {
             to = payees[i];
             ownership = balanceOf(to, id);
             share = ((amount * ownership) / _totalTokens[id]);
-            payToken.transferFrom(msg.sender, to, share);
+            success = payToken.transferFrom(msg.sender, to, share);
+            require (success, "Transfer failed");
             total += share;
         }
         require (total <= _totalTokens[id]);
