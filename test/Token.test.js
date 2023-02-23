@@ -119,20 +119,75 @@ describe("Token", function () {
             expect(await this.token.balanceOf(this.signers[5].address, 3)).to.equal(100);
             let owners = await this.token.getOwnersOfToken(id);
             expect(owners.length).to.equal(19);
-            for (let i = 0; i < 20; i++) {
-                let balance = await this.token.balanceOf(this.signers[i].address, 3);
-                for (let j = 0; j < owners.length; j++) {
-                    if (this.signers[i].address == owners[j]) {
-                        console.log("Owners[j] : Balance: ", i, j, owners[j], balance.toString());
-                    }
-                }
-            
-            }
+//            for (let i = 0; i < 20; i++) {
+//                let balance = await this.token.balanceOf(this.signers[i].address, 3);
+//                for (let j = 0; j < owners.length; j++) {
+//                    if (this.signers[i].address == owners[j]) {
+//                        console.log("Owners[j] : Balance: ", i, j, owners[j], balance.toString());
+//                    }
+//                }          
+//            }
+        });
+    });
 
+    describe("Mint Batch", function () {  
+        beforeEach(async function () {
+            let id = 3;
+            let accum = 6000;
+            let ids = [4,5,6];
+            let amounts = [1000, 2000, 3000];
+            await this.token.mintBatch(this.signers[0].address, ids, amounts, "0xdeadbeef");
+            await this.token.mintBatch(this.signers[1].address, ids, amounts, "0xdeadbeef");
+            await this.token.mintBatch(this.signers[2].address, ids, amounts, "0xdeadbeef");
+            expect(await this.token.balanceOf(this.signers[2].address, ids[1])).to.equal(amounts[1]);
+            for (let i=0; i<ids.length; i++) {
+                let balance = await this.token.getTotalTokens(ids[i]);
+                expect(balance).to.equal(amounts[i]*3);  
+            }
+         
+        })
+            
+    
+        it("Should mint the right amount", async function () {
+            let id = 4;
+            let amount = 0;
+            let accum = 1000;
+            
+            let balance = await this.token.getTotalTokens(id);
+            expect(balance).to.equal(accum*3);          
         });
     
-
+        it("Check tokens owned", async function () {
+            let idds = [4,5,6];
+            for (let i = 0; i < 3; i++) {
+                let ids = await this.token.getTokensOwned(this.signers[i].address);
+                for(let j = 0; j < ids.length; j++) {
+                    expect(ids[j]).to.equal(idds[j]);
+                }
+            }
+        });
+    /*        
+            it("Check owners of tokens", async function () {
+                let id = 3;
+                let owners = await this.token.getOwnersOfToken(id);
+                for(let j = 0; j < owners.length; j++) {
+                    expect(owners[j]).to.equal(this.signers[j].address);
+                }
+            });
+    
+            it("Check token balances", async function () {
+                let id = 3;
+                let amount = 0;
+                for (let i = 0; i < 20; i++) {
+                    amount = amount + 100;
+                    expect(await this.token.balanceOf(this.signers[i].address, 3)).to.equal(amount);
+                }
+            });
+            */
+        });    
     });
+        
+
+    
   
-  });
   
