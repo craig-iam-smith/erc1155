@@ -6,13 +6,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "hardhat/console.sol";
 
 contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
 
     // Mapping from owner to array of token IDs owned 
     mapping(address => uint256[]) private _ownedTokens;
     // Mapping from token ID to array of owners
-    mapping(uint256 => address[]) private _tokenOwners;
+    mapping(uint256 => address[]) private _tokenOwners; 
     mapping(uint256 => mapping(address => uint256)) private _idTokenOwnerIndex;
     // Mapping from token ID to total tokens minted
     mapping(uint256 => uint256) private _totalTokens;
@@ -54,6 +55,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         whenNotPaused
         override
     {
+        
         uint256 idsLength = ids.length;
         uint256 amountsLength =amounts.length;
         require (idsLength > 0);
@@ -67,13 +69,14 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
             // minting
             if (from == address(0)) {
                 _totalTokens[id] += amount;
-                // if minting and this is first mint, so first real TokenOwnerIndex is non-zero
-                if (_totalTokens[id] == 0)
-                    _tokenOwners[id].push(msg.sender);
+                addToTracking(id, to);
             }
             // burning 
             else if (to == address(0)) {
                 _totalTokens[id] -= amount;
+                if ((balanceOf(from, id) == amount) && (amount > 0)) {
+                    removeFromTracking(id, from);
+                }
             }
             // transferring
             else {             
@@ -89,25 +92,48 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);   
     }
 
-    function removeFromTracking(uint256 id, address owner) private {
-        uint256 myLength = _tokenOwners[id].length-1;
-        uint256 index = _idTokenOwnerIndex[id][owner];  
-        // if balanceOf(owner, id) == amount delete from arrays
-        if (index != myLength) {
-            _ownedTokens[owner][index] = _ownedTokens[owner][myLength];
-            _tokenOwners[id][index] = _tokenOwners[id][myLength];
+    function removeFromTracking(uint256 id, address account) private {
+        uint256 ownersLength = _tokenOwners[id].length-1;
+        uint256 tokensLength = _ownedTokens[account].length-1;
+        uint256 index = _idTokenOwnerIndex[id][account];  
+        // if balanceOf(account, id) == amount delete from arrays
+        if (index != ownersLength) {
+            _tokenOwners[id][index] = _tokenOwners[id][ownersLength];
         }
-        _ownedTokens[owner].pop;
-        _tokenOwners[id].pop;
-        _idTokenOwnerIndex[id][owner] = 0;
+        uint256 i;
+        for (i=0;i<tokensLength;i++) {
+            if (_ownedTokens[account][i] == id) {
+                _ownedTokens[account][i] = _ownedTokens[account][tokensLength];
+                break;
+            }
+        }
+        _ownedTokens[account].pop();
+        _tokenOwners[id].pop();
+        _idTokenOwnerIndex[id][account] = 0;
     }
-    function addToTracking (uint256 id, address owner) private {
-        _ownedTokens[owner].push(id); 
-        _tokenOwners[id].push(owner);     
-        _idTokenOwnerIndex[id][owner] = _tokenOwners[id].length-1; // keep track of index 
+    function addToTracking (uint256 id, address account) private {
+        _ownedTokens[account].push(id); 
+        _tokenOwners[id].push(account);     
+        _idTokenOwnerIndex[id][account] = _tokenOwners[id].length-1; // keep track of index 
     }
 
 
+    function getTotalTokens(uint256 id) public view returns (uint256) {
+        return _totalTokens[id];
+    }
+    // @dev 
+    // @params owner 
+    // @return returns array of token ids owned by this address
+    function getTokensOwned(address owner) public view returns (uint256[] memory) {
+        return _ownedTokens[owner];
+    }
+    
+    // @dev
+    // @params tokenid
+    // @return returns array of owner addresses of this tokenid
+    function getOwnersOfToken(uint256 tokenId) public view returns (address[] memory) {
+        return _tokenOwners[tokenId];
+    }
     function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner
     {
         ERC20 payToken = ERC20(paymentTokenContract);
@@ -130,20 +156,5 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         require (total <= _totalTokens[id]);
     }
 
-    function getTotalTokens(uint256 id) public view returns (uint256) {
-        return _totalTokens[id];
-    }
-    // @dev 
-    // @params owner 
-    // @return returns array of token ids owned by this address
-    function getTokensOwned(address owner) public view returns (uint256[] memory) {
-        return _ownedTokens[owner];
-    }
-    // @dev
-    // @params tokenid
-    // @return returns array of owner addresses of this tokenid
-    function getOwnersOfToken(uint256 tokenId) public view returns (address[] memory) {
-        return _tokenOwners[tokenId];
-    }
 
 }

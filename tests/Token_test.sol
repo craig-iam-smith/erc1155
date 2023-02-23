@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 
 pragma solidity >=0.7.0 <0.9.0;
-import "remix_tests.sol";
-import "../contracts/MyToken.sol";
+import "../contracts/Token.sol";
 
 contract MyTokenTest {
 
-    MyToken s;
+    Tokens;
     function beforeAll () public {
-        s = new MyToken();
+        s = new Token();
     }
 
     function testSetURI () public {
