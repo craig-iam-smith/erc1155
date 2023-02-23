@@ -18,10 +18,25 @@ describe("Token", function () {
         const Token = await ethers.getContractFactory("ERC1155plus");
         this.token = await Token.deploy();
         await this.token.deployed();
+        const craigToken = await ethers.getContractFactory("Craig");
+        this.ctoken = await craigToken.deploy();
+        await this.ctoken.deployed();
     });
     
 
-  
+    describe("ERC20", function () {  
+        it("Should set the right owner", async function () {
+            let name = await this.ctoken.name();
+            let symbol = await this.ctoken.symbol();
+            let decimals = await this.ctoken.decimals();
+            let totalSupply = await this.ctoken.totalSupply();
+            let balance = await this.ctoken.balanceOf(this.owner.address);
+            let tx = await this.ctoken.transfer(this.bob.address, ethers.utils.parseUnits('10', decimals)) 
+            await tx.wait()
+            expect(await this.ctoken.balanceOf(this.bob.address)).to.equal(ethers.utils.parseUnits('10', decimals))
+        });   
+    });
+
     describe("Deploy", function () {  
       it("Should set the right owner", async function () {
         await this.token.setURI("the URI we use");
@@ -119,14 +134,6 @@ describe("Token", function () {
             expect(await this.token.balanceOf(this.signers[5].address, 3)).to.equal(100);
             let owners = await this.token.getOwnersOfToken(id);
             expect(owners.length).to.equal(19);
-//            for (let i = 0; i < 20; i++) {
-//                let balance = await this.token.balanceOf(this.signers[i].address, 3);
-//                for (let j = 0; j < owners.length; j++) {
-//                    if (this.signers[i].address == owners[j]) {
-//                        console.log("Owners[j] : Balance: ", i, j, owners[j], balance.toString());
-//                    }
-//                }          
-//            }
         });
     });
 
@@ -185,6 +192,43 @@ describe("Token", function () {
             });
             */
         });    
+        describe("Pay Holders", function () {  
+            beforeEach(async function () {
+                let ids = [4,5,6];
+                let amounts = [1000, 2000, 3000];
+                await this.token.mintBatch(this.signers[3].address, ids, amounts, "0xdeadbeef");
+                await this.token.mintBatch(this.signers[4].address, ids, amounts, "0xdeadbeef");
+                await this.token.mintBatch(this.signers[5].address, ids, amounts, "0xdeadbeef");
+                await this.token.mintBatch(this.signers[6].address, ids, amounts, "0xdeadbeef");
+                expect(await this.token.balanceOf(this.signers[4].address, ids[1])).to.equal(amounts[1]);
+                for (let i=0; i<ids.length; i++) {
+                    let balance = await this.token.getTotalTokens(ids[i]);
+                    expect(balance).to.equal(amounts[i]*4);  
+                }
+             
+            })
+                
+        
+            it("Pay Holders of an ID", async function () {
+                let id = 4;
+                let decimals = 18;
+                let amount = 10 * 10**decimals;
+                let accum = 1000;
+                let tx = await this.ctoken.transfer(this.token.address, ethers.utils.parseUnits('10', decimals)) 
+                await tx.wait()
+                expect(await this.ctoken.balanceOf(this.token.address)).to.equal(ethers.utils.parseUnits('10', decimals))
+                await this.ctoken.approve(this.token.address, ethers.utils.parseUnits('10', decimals))
+                
+                await this.token.payAllHolders(id, ethers.utils.parseUnits('10',decimals), this.ctoken.address);
+
+                for (let i = 0; i < 4; i++) {
+                    let balance = await this.ctoken.balanceOf(this.signers[i+3].address);
+                    expect (balance).to.equal(ethers.utils.parseUnits('2.5', decimals));
+                    
+                };          
+            });
+        });
+    
     });
         
 
