@@ -63,7 +63,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         uint256 id;
         uint256 amount;
         
-        for (uint256 i = 0; i < idsLength; i++) {
+        for (uint256 i = 0; i < idsLength;) {
             id = ids[i];
             amount = amounts[i];
             // minting
@@ -88,6 +88,8 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
                     addToTracking(id, to);
                 }
             }
+            unchecked {
+                i++;}
         }
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);   
     }
@@ -101,11 +103,13 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
             _tokenOwners[id][index] = _tokenOwners[id][ownersLength];
         }
         uint256 i;
-        for (i=0;i<tokensLength;i++) {
+        for (i=0;i<tokensLength;) {
             if (_ownedTokens[account][i] == id) {
                 _ownedTokens[account][i] = _ownedTokens[account][tokensLength];
                 break;
             }
+            unchecked {
+                i++;}
         }
         _ownedTokens[account].pop();
         _tokenOwners[id].pop();
@@ -140,6 +144,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         ERC20 payToken = ERC20(paymentTokenContract);
         uint256 i;
         address to;
+        uint256 totalTokens = _totalTokens[id];
         address[] memory payees = _tokenOwners[id];
         uint256 end = payees.length;
         require (paymentTokenContract != address(0));
@@ -148,13 +153,15 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         uint256 ownership;
         uint256 share;
         bool success;
-        for (i=0;i<end;i++) {
+        for (i=0;i<end;) {
             to = payees[i];
             ownership = balanceOf(to, id);
-            share = ((amount * ownership) / _totalTokens[id]);
+            share = ((amount * ownership) / totalTokens);
             success = payToken.transferFrom(msg.sender, to, share);
             require (success, "Transfer failed");
-            total += share;
+            total = total + share;
+            unchecked {
+                i++;}
         }
         require (total <= amount, "Total paid is more than amount");
     }
