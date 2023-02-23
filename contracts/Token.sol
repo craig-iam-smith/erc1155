@@ -156,7 +156,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
             require (success, "Transfer failed");
             total += share;
         }
-        require (total <= _totalTokens[id]);
+        require (total <= amount, "Total paid is more than amount");
     }
 
 
