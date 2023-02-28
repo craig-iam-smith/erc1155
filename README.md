@@ -1,13 +1,10 @@
-# Sample Hardhat Project
+# Extensions to ERC-1155
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
+This project implements an extension to ERC-1155 that allows a making payments to holders of ERC-1155 tokens
+The payment function is made for a token with number of holders under 1000
+If holders is over 1000 use a different methodology for making payments.
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+yarn
+yarn hardhat test
 ```
