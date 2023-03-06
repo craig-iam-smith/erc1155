@@ -173,24 +173,30 @@ describe("Token", function () {
                 }
             }
         });
-    /*        
-            it("Check owners of tokens", async function () {
-                let id = 3;
-                let owners = await this.token.getOwnersOfToken(id);
+            
+        it("Check owners of tokens", async function () {
+            let idds = [4,5,6];
+            for (let i = 0; i < 3; i++) {
+                let owners = await this.token.getOwnersOfToken(idds[i]);
                 for(let j = 0; j < owners.length; j++) {
                     expect(owners[j]).to.equal(this.signers[j].address);
-                }
-            });
-    
-            it("Check token balances", async function () {
-                let id = 3;
+                };
+            }
+        });
+
+        it("Check token balances", async function () {
+                let idds = [4,5,6];
+                let amounts = [1000, 2000, 3000];
                 let amount = 0;
-                for (let i = 0; i < 20; i++) {
-                    amount = amount + 100;
-                    expect(await this.token.balanceOf(this.signers[i].address, 3)).to.equal(amount);
+                let decimals = await this.ctoken.decimals();
+                for (let i = 0; i < 3; i++) {
+                    let ids = await this.token.getTokensOwned(this.signers[i].address);
+                    for(let j = 0; j < ids.length; j++) {
+
+                        expect(await this.token.balanceOf(this.signers[i].address, 4+j)).to.equal(amounts[j]);
+                    }
                 }
             });
-            */
         });    
         describe("Pay Holders", function () {  
             beforeEach(async function () {
@@ -211,7 +217,7 @@ describe("Token", function () {
         
             it("Pay Holders of an ID", async function () {
                 let id = 4;
-                let decimals = 18;
+                let decimals = await this.ctoken.decimals();
                 let amount = 10 * 10**decimals;
                 let accum = 1000;
                 let tx = await this.ctoken.transfer(this.token.address, ethers.utils.parseUnits('10', decimals)) 

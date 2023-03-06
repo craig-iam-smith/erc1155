@@ -139,7 +139,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
     function getOwnersOfToken(uint256 tokenId) public view returns (address[] memory) {
         return _tokenOwners[tokenId];
     }
-    function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner
+    function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner returns(bool success)
     {
         ERC20 payToken = ERC20(paymentTokenContract);
         uint256 i;
@@ -152,7 +152,10 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         uint256 total=0;
         uint256 ownership;
         uint256 share;
-        bool success;
+        if (end > 50) {
+            success = false ;
+            return success;
+        }
         for (i=0;i<end;) {
             to = payees[i];
             ownership = balanceOf(to, id);
@@ -163,6 +166,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
             unchecked {
                 i++;}
         }
+        success = true;
         require (total <= amount, "Total paid is more than amount");
     }
 
