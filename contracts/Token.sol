@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -169,6 +169,22 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
         success = true;
         require (total <= amount, "Total paid is more than amount");
     }
-
-
+    function dropToAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner returns(bool success)
+    {
+        ERC1155 payToken = ERC1155(paymentTokenContract);
+        uint256 i;
+        address to;
+        address[] memory payees = _tokenOwners[id];
+        uint256 end = payees.length;
+        require (paymentTokenContract != address(0));
+        require (payToken.balanceOf(msg.sender, id) > amount, "Must have enough of payment ERC1155 token");
+        for (i=0;i<end;) {
+            to = payees[i];
+            payToken.safeTransferFrom(msg.sender, to, id, 1, bytes (""));
+            require (success, "Transfer failed");
+            unchecked {
+                i++;}
+        }
+        success = true;
+    }
 }

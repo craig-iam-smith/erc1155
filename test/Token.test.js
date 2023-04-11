@@ -233,6 +233,25 @@ describe("Token", function () {
                     
                 };          
             });
+            it("Drop NFT tokens to holders of an ID", async function () {
+                let id = 4;
+                let decimals = await this.ctoken.decimals();
+                let amount = 10 * 10**decimals;
+                let accum = 1000;
+                let tx = await this.ctoken.transfer(this.token.address, ethers.utils.parseUnits('10', decimals)) 
+                await tx.wait()
+                expect(await this.ctoken.balanceOf(this.token.address)).to.equal(ethers.utils.parseUnits('10', decimals))
+                await this.ctoken.approve(this.token.address, ethers.utils.parseUnits('10', decimals))
+                
+                await this.token.payAllHolders(id, ethers.utils.parseUnits('10',decimals), this.ctoken.address);
+
+                for (let i = 0; i < 4; i++) {
+                    let balance = await this.ctoken.balanceOf(this.signers[i+3].address);
+                    expect (balance).to.equal(ethers.utils.parseUnits('2.5', decimals));
+                    
+                };          
+            });
+
         });
     
     });
