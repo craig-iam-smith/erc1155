@@ -134,6 +134,15 @@ describe("Token", function () {
             let owners = await this.token.getOwnersOfToken(id);
             expect(owners.length).to.equal(19);
         });
+
+        
+        it("burn blacklisted", async function () {
+            let id = 3;
+            let amount = 100;
+            await this.token.changeBlacklister(this.owner.address);
+            await this.token.blacklist(this.signers[4].address);
+            await expect(this.token.connect(this.signers[4]).burn(this.signers[4].address, id, amount)).to.be.reverted;
+        });
     });
 
     describe("Mint Batch", function () {  
@@ -162,6 +171,24 @@ describe("Token", function () {
             let balance = await this.token.getTotalTokens(id);
             expect(balance).to.equal(accum*3);          
         });
+
+        it("Mint blacklisted", async function () {
+            let id = 4;
+            let amount = 0;
+            let accum = 1000;
+            let ids = [4,5,6];
+            let amounts = [1000, 2000, 3000];
+            let balance = await this.token.getTotalTokens(id);
+            expect(balance).to.equal(accum*3);          
+
+            await this.token.changeBlacklister(this.owner.address);
+            await this.token.blacklist(this.signers[2].address);            
+            await expect(this.token.mintBatch(this.signers[2].address, ids, amounts, "0xdeadbeef")).to.be.reverted;
+            
+            balance = await this.token.getTotalTokens(id);
+            expect(balance).to.equal(accum*3);          
+        });
+
     
         it("Check tokens owned", async function () {
             let idds = [4,5,6];
@@ -253,25 +280,13 @@ describe("Token", function () {
 
         });
         describe("Pause Token by ID", function () {  
+            const ids = [4,5,6];
+            let amounts = [1000, 2000, 3000];
             beforeEach(async function () {
-                let ids = [4,5,6];
-                let amounts = [1000, 2000, 3000];
                 await this.token.mintBatch(this.signers[3].address, ids, amounts, "0xdeadbeef");
                 await this.token.mintBatch(this.signers[4].address, ids, amounts, "0xdeadbeef");
                 await this.token.mintBatch(this.signers[5].address, ids, amounts, "0xdeadbeef");
                 await this.token.mintBatch(this.signers[6].address, ids, amounts, "0xdeadbeef");
-                await this.token.pauseToken(ids[1]);
-                /// expect transferFrom to fail
-
-                await expect(
-                    this.token.connect(this.signers[3]).safeTransferFrom(this.signers[3].address, this.signers[4].address, ids[1], 1000, "0xdeadbeef")
-                ).to.be.revertedWith("ERC1155Pausable: token transfer while paused");
-                await this.token.unPauseToken(ids[1]);
-                /// expect transferFrom to succeed
-                await this.token.connect(this.signers[3]).safeTransferFrom(this.signers[3].address, this.signers[4].address, ids[1], 1000, "0xdeadbeef")
-
-
-                expect(await this.token.balanceOf(this.signers[4].address, ids[1])).to.equal(amounts[1]+1000);
                 for (let i=0; i<ids.length; i++) {
                     let balance = await this.token.getTotalTokens(ids[i]);
                     expect(balance).to.equal(amounts[i]*4);  
@@ -316,6 +331,21 @@ describe("Token", function () {
                     
                 };          
             });
+            it ("Pause token", async function () {
+                await this.token.pauseToken(ids[1]);
+                /// expect transferFrom to fail
+
+                await expect(
+                    this.token.connect(this.signers[3]).safeTransferFrom(this.signers[3].address, this.signers[4].address, ids[1], 1000, "0xdeadbeef")
+                ).to.be.revertedWith("ERC1155Pausable: token transfer while paused");
+                await this.token.unPauseToken(ids[1]);
+                /// expect transferFrom to succeed
+                await this.token.connect(this.signers[3]).safeTransferFrom(this.signers[3].address, this.signers[4].address, ids[1], 1000, "0xdeadbeef")
+
+
+                expect(await this.token.balanceOf(this.signers[4].address, ids[1])).to.equal(amounts[1]+1000);
+            });
+
 
         });
     

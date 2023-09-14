@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./extensions/ERC1155PausableID.sol";
+import "./extensions/Blacklistable.sol";
 import "hardhat/console.sol";
 
-contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID {
+contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Blacklistable {
 
     // Mapping from owner to array of token IDs owned 
     mapping(address => uint256[]) private _ownedTokens;
@@ -54,6 +55,9 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID {
         require (idsLength == amountsLength);
         uint256 id;
         uint256 amount;
+
+        require (!isBlacklisted(from));
+        require (!isBlacklisted(to));
         
         for (uint256 i = 0; i < idsLength;) {
             id = ids[i];
