@@ -3,12 +3,12 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./extensions/ERC1155PausableID.sol";
 import "hardhat/console.sol";
 
-contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
+contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID {
 
     // Mapping from owner to array of token IDs owned 
     mapping(address => uint256[]) private _ownedTokens;
@@ -18,6 +18,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
     // Mapping from token ID to total tokens minted
     mapping(uint256 => uint256) private _totalTokens;
 
+
     constructor() ERC1155("") {}
 /*
     function supportsInterface(bytes4 interfaceId) external view returns (bool) {
@@ -26,14 +27,6 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
 */
     function setURI(string memory newuri) public onlyOwner {
         _setURI(newuri);
-    }
-
-    function pause() public onlyOwner {
-        _pause();
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
     }
 
     function mint(address account, uint256 id, uint256 amount, bytes memory data)
@@ -52,8 +45,7 @@ contract ERC1155plus is ERC1155, Ownable, Pausable, ERC1155Burnable {
 
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
-        whenNotPaused
-        override
+        override (ERC1155, ERC1155PausableID) 
     {
         
         uint256 idsLength = ids.length;

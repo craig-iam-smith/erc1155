@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-const { parseUnits } = require("ethers/lib/utils");
 const { ethers, network } = require("hardhat");
 const { networkConfig } = require("../helper-hardhat-config");
 require('dotenv').config();
@@ -207,6 +206,72 @@ describe("Token", function () {
                 await this.token.mintBatch(this.signers[5].address, ids, amounts, "0xdeadbeef");
                 await this.token.mintBatch(this.signers[6].address, ids, amounts, "0xdeadbeef");
                 expect(await this.token.balanceOf(this.signers[4].address, ids[1])).to.equal(amounts[1]);
+                for (let i=0; i<ids.length; i++) {
+                    let balance = await this.token.getTotalTokens(ids[i]);
+                    expect(balance).to.equal(amounts[i]*4);  
+                }
+             
+            })
+                
+        
+            it("Pay Holders of an ID", async function () {
+                let id = 4;
+                let decimals = await this.ctoken.decimals();
+                let amount = 10 * 10**decimals;
+                let accum = 1000;
+                let tx = await this.ctoken.transfer(this.token.address, ethers.utils.parseUnits('10', decimals)) 
+                await tx.wait()
+                expect(await this.ctoken.balanceOf(this.token.address)).to.equal(ethers.utils.parseUnits('10', decimals))
+                await this.ctoken.approve(this.token.address, ethers.utils.parseUnits('10', decimals))
+                
+                await this.token.payAllHolders(id, ethers.utils.parseUnits('10',decimals), this.ctoken.address);
+
+                for (let i = 0; i < 4; i++) {
+                    let balance = await this.ctoken.balanceOf(this.signers[i+3].address);
+                    expect (balance).to.equal(ethers.utils.parseUnits('2.5', decimals));
+                    
+                };          
+            });
+            it("Drop NFT tokens to holders of an ID", async function () {
+                let id = 4;
+                let decimals = await this.ctoken.decimals();
+                let amount = 10 * 10**decimals;
+                let accum = 1000;
+                let tx = await this.ctoken.transfer(this.token.address, ethers.utils.parseUnits('10', decimals)) 
+                await tx.wait()
+                expect(await this.ctoken.balanceOf(this.token.address)).to.equal(ethers.utils.parseUnits('10', decimals))
+                await this.ctoken.approve(this.token.address, ethers.utils.parseUnits('10', decimals))
+                
+                await this.token.payAllHolders(id, ethers.utils.parseUnits('10',decimals), this.ctoken.address);
+
+                for (let i = 0; i < 4; i++) {
+                    let balance = await this.ctoken.balanceOf(this.signers[i+3].address);
+                    expect (balance).to.equal(ethers.utils.parseUnits('2.5', decimals));
+                    
+                };          
+            });
+
+        });
+        describe("Pause Token by ID", function () {  
+            beforeEach(async function () {
+                let ids = [4,5,6];
+                let amounts = [1000, 2000, 3000];
+                await this.token.mintBatch(this.signers[3].address, ids, amounts, "0xdeadbeef");
+                await this.token.mintBatch(this.signers[4].address, ids, amounts, "0xdeadbeef");
+                await this.token.mintBatch(this.signers[5].address, ids, amounts, "0xdeadbeef");
+                await this.token.mintBatch(this.signers[6].address, ids, amounts, "0xdeadbeef");
+                await this.token.pauseToken(ids[1]);
+                /// expect transferFrom to fail
+
+                await expect(
+                    this.token.connect(this.signers[3]).safeTransferFrom(this.signers[3].address, this.signers[4].address, ids[1], 1000, "0xdeadbeef")
+                ).to.be.revertedWith("ERC1155Pausable: token transfer while paused");
+                await this.token.unPauseToken(ids[1]);
+                /// expect transferFrom to succeed
+                await this.token.connect(this.signers[3]).safeTransferFrom(this.signers[3].address, this.signers[4].address, ids[1], 1000, "0xdeadbeef")
+
+
+                expect(await this.token.balanceOf(this.signers[4].address, ids[1])).to.equal(amounts[1]+1000);
                 for (let i=0; i<ids.length; i++) {
                     let balance = await this.token.getTotalTokens(ids[i]);
                     expect(balance).to.equal(amounts[i]*4);  
