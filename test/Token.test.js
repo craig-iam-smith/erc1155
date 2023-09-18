@@ -38,7 +38,7 @@ describe("Token", function () {
 
     describe("Deploy", function () {  
       it("Should set the right owner", async function () {
-        await this.token.setURI("the URI we use");
+        await this.token.setURI(1, "the URI we use");
         console.log("URI: ", await this.token.uri(0));
 
         expect(await this.token.owner()).to.equal(this.owner.address);
@@ -348,7 +348,16 @@ describe("Token", function () {
 
 
         });
-    
+        describe("URI", function () {  
+            it("URI by id", async function () {
+              await this.token.setURI(1, "the URI we use");
+              console.log("URI: ", await this.token.uri(0));
+      
+              expect(await this.token.owner()).to.equal(this.owner.address);
+            });
+        
+          });
+          
     });
         
 

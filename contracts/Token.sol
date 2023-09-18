@@ -7,9 +7,13 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./extensions/ERC1155PausableID.sol";
 import "./extensions/Blacklistable.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
+//import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155MetadataURI.sol";
+
+
 import "hardhat/console.sol";
 
-contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Blacklistable {
+contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Blacklistable, ERC1155URIStorage {
 
     // Mapping from owner to array of token IDs owned 
     mapping(address => uint256[]) private _ownedTokens;
@@ -26,8 +30,14 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Bl
         // How should the check here be like?
     }
 */
-    function setURI(string memory newuri) public onlyOwner {
-        _setURI(newuri);
+    function uri(uint id) override (ERC1155, ERC1155URIStorage)  public view returns (string memory) {
+        return super.uri(id);   
+    }
+    function setURI(uint id, string memory newuri) 
+        public
+        onlyOwner
+        {
+        _setURI(id, newuri);
     }
 
     function mint(address account, uint256 id, uint256 amount, bytes memory data)
