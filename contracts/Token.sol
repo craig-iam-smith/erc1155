@@ -9,9 +9,7 @@ import "./extensions/ERC1155PausableID.sol";
 import "./extensions/Blacklistable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
 //import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155MetadataURI.sol";
-
-
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
 contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Blacklistable, ERC1155URIStorage {
 
@@ -21,7 +19,7 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Bl
     mapping(uint256 => address[]) private _tokenOwners; 
     mapping(uint256 => mapping(address => uint256)) private _idTokenOwnerIndex;
     // Mapping from token ID to total tokens minted
-    mapping(uint256 => uint256) private _totalTokens;
+    mapping(uint256 => uint256) public _totalTokens;
     mapping (uint256 => mapping (address => uint256)) _payments;
 
 
@@ -194,5 +192,8 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Bl
                 i++;}
         }
         success = true;
+    }
+    function getTokenOwners(uint256 id) public view returns (address[] memory) {
+        return _tokenOwners[id];
     }
 }

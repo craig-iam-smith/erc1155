@@ -20,6 +20,9 @@ describe("Token", function () {
         const craigToken = await ethers.getContractFactory("Craig");
         this.ctoken = await craigToken.deploy();
         await this.ctoken.deployed();
+        const PayFactory = await ethers.getContractFactory("payHolders");
+        this.pay = await PayFactory.deploy(this.token.address, this.ctoken.address);
+        await this.pay.deployed();
     });
     
 
@@ -331,6 +334,27 @@ describe("Token", function () {
                     
                 };          
             });
+            it("Record Payment of Holders of an ID", async function () {
+                let id = 4;
+                let decimals = await this.ctoken.decimals();
+                let amount = 10 * 10**decimals;
+                let accum = 1000;
+                let tx = await this.ctoken.transfer(this.token.address, ethers.utils.parseUnits('10', decimals)) 
+                await tx.wait()
+                expect(await this.ctoken.balanceOf(this.token.address)).to.equal(ethers.utils.parseUnits('10', decimals))
+                await this.ctoken.approve(this.pay.address, ethers.utils.parseUnits('10', decimals))
+                
+                await this.pay.recordAllHolders(id, ethers.utils.parseUnits('10',decimals), this.ctoken.address);
+
+                for (let i = 0; i < 4; i++) {
+                    console.log
+                    await this.pay.connect(this.signers[i+3]).withdraw(id);
+                    let balance = await this.ctoken.balanceOf(this.signers[i+3].address);
+                    expect (balance).to.equal(ethers.utils.parseUnits('2.5', decimals));
+                    
+                };          
+            });
+
             it ("Pause token", async function () {
                 await this.token.pauseToken(ids[1]);
                 /// expect transferFrom to fail
