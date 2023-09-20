@@ -146,38 +146,9 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Bl
     function getOwnersOfToken(uint256 tokenId) public view returns (address[] memory) {
         return _tokenOwners[tokenId];
     }
-    function recordAllHolders(uint256 id, uint256 amount, address paymentToken) public onlyOwner returns(bool success)
-    {
-        // record payments to all holders to a mapping from token id to array of holders and amounts
-        // this is to be used to pay all holders later
-        
-        ERC20 payToken = ERC20(paymentToken);
-        uint256 i;
-        address to;
-        uint256 totalTokens = _totalTokens[id];
-        address[] memory payees = _tokenOwners[id];
-        uint256 end = payees.length;
-        require (paymentToken != address(0));
-        require (payToken.balanceOf(msg.sender) > amount, "Must have enough of payment token");
-        // 
-        uint256 total=0;
-        uint256 ownership;
-        uint256 share;
-        for (i=0;i<end;) {
-            to = payees[i];
-            ownership = balanceOf(to, id);
-            share = ((amount * ownership) / totalTokens);
-            _payments[id][to] += share;            
-            total = total + share;
-            unchecked {
-                i++;}
-        }
-        success = true;
-        require (total <= amount, "Total paid is more than amount");
-    }
     function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner returns(bool success)
     {
-        ERC20 payToken = ERC20(paymentTokenContract);
+        IERC20 payToken = IERC20(paymentTokenContract);
         uint256 i;
         address to;
         uint256 totalTokens = _totalTokens[id];
