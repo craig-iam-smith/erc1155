@@ -347,7 +347,6 @@ describe("Token", function () {
                 await this.pay.recordAllHolders(id, ethers.utils.parseUnits('10',decimals), this.ctoken.address);
 
                 for (let i = 0; i < 4; i++) {
-                    console.log
                     await this.pay.connect(this.signers[i+3]).withdraw(id);
                     let balance = await this.ctoken.balanceOf(this.signers[i+3].address);
                     expect (balance).to.equal(ethers.utils.parseUnits('2.5', decimals));

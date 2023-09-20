@@ -40,9 +40,6 @@ function recordAllHolders(uint256 id, uint256 amount, address paymentToken) publ
             unchecked {
                 i++;}
         }
-        console.log("total paid", total);
-        console.log("amount", amount);
-        console.log("msg.sender allowance", payToken.allowance(msg.sender, address(this)));
         success = payToken.transferFrom(msg.sender, address(this), amount);
         require (success, "Transfer failed");
 
