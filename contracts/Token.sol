@@ -21,8 +21,6 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Bl
     // Mapping from token ID to total tokens minted
     mapping(uint256 => uint256) public _totalTokens;
     mapping (uint256 => mapping (address => uint256)) _payments;
-    uint256 public _maxPayout = 50;
-
 
     constructor() ERC1155("") {}
 /*
@@ -146,14 +144,6 @@ contract ERC1155plus is ERC1155, Ownable, ERC1155Burnable, ERC1155PausableID, Bl
         return _tokenOwners[tokenId];
     }
       
-   /// function - setMaxPayout
-   /// @param maxPayout_ The maximum number of holders to pay at once.
-   
-  function setMaxPayout(uint256 maxPayout_) public onlyOwner {
-    require(maxPayout_ > 0);
-    _maxPayout = maxPayout_;
-  }
-
     function payAllHolders(uint256 id, uint256 amount, address paymentTokenContract) public onlyOwner returns(bool success)
     {
         IERC20 payToken = IERC20(paymentTokenContract);
